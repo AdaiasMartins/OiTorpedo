@@ -1,0 +1,5 @@
+celery[redis]==5.4.0
+fastapi==0.115.6
+qrcode[pil]==7.4.2
+requests==2.32.3
+uvicorn[standard]==0.34.0

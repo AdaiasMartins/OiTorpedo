@@ -56,6 +56,53 @@ services:
     networks:
       - evolution-network
 
+  poc-api:
+    build:
+      context: ./evolution-poc
+    container_name: evolution-poc-api
+    restart: always
+    command: uvicorn app.api:app --host 0.0.0.0 --port 8000
+    env_file:
+      - .env
+    environment:
+      EVOLUTION_BASE_URL: http://evolution-api:8080
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SEND_DELAY_SECONDS: 3
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    depends_on:
+      evolution-api:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - evolution-network
+
+  worker-celery:
+    build:
+      context: ./evolution-poc
+    container_name: evolution-celery-worker
+    restart: always
+    env_file:
+      - .env
+    environment:
+      EVOLUTION_BASE_URL: http://evolution-api:8080
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SEND_DELAY_SECONDS: 3
+    volumes:
+      - .:/workspace
+    depends_on:
+      evolution-api:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - evolution-network
+
 volumes:
   evolution_instances:
   postgres_data:
