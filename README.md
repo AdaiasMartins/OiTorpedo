@@ -176,7 +176,9 @@ docker compose run --rm worker-celery \
 
 ### 4. Enviar mensagens em lote
 
-O envio em lote cria uma tarefa no Celery. O worker envia uma mensagem por vez e pode esperar alguns segundos entre os destinatarios.
+O envio em lote cria uma task Celery para cada destinatario. Isso permite retry individual, evita uma task longa demais e facilita identificar qual envio falhou.
+
+Quando `delay_seconds` for maior que zero, as tasks sao agendadas com intervalo entre elas. Por exemplo, com `delay_seconds: 3`, a primeira entra imediatamente, a segunda em 3 segundos, a terceira em 6 segundos, e assim por diante.
 
 Via API HTTP da POC:
 
@@ -195,7 +197,13 @@ Resposta esperada:
 
 ```json
 {
-  "task_id": "id-da-tarefa"
+  "instance": "main",
+  "total": 2,
+  "delay_seconds": 3,
+  "task_ids": [
+    "id-da-primeira-task",
+    "id-da-segunda-task"
+  ]
 }
 ```
 
@@ -276,7 +284,7 @@ O arquivo `evolution-poc/app/evolution_client.py` centraliza as chamadas HTTP pa
 
 O arquivo `evolution-poc/app/api.py` expoe essas operacoes como rotas FastAPI.
 
-O arquivo `evolution-poc/app/tasks.py` define a tarefa `send_bulk_messages`, que recebe uma lista de numeros e envia as mensagens uma por uma usando o Celery.
+O arquivo `evolution-poc/app/tasks.py` define a task `send_single_message`, que envia uma mensagem para um destinatario com retry e limite de duracao. O helper `enqueue_bulk_messages` agenda uma task individual para cada numero recebido.
 
 O arquivo `evolution-poc/app/cli.py` permite executar as mesmas acoes pelo terminal.
 

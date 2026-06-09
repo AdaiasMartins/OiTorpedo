@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .evolution_client import EvolutionClient
-from .tasks import send_bulk_messages
+from .tasks import enqueue_bulk_messages
 
 app = FastAPI(title="Evolution POC API")
 
@@ -55,14 +55,13 @@ def send_text(payload: SendTextRequest) -> dict[str, Any]:
 
 
 @app.post("/messages/bulk")
-def send_bulk(payload: BulkSendRequest) -> dict[str, str]:
-    task = send_bulk_messages.delay(
+def send_bulk(payload: BulkSendRequest) -> dict[str, Any]:
+    return enqueue_bulk_messages(
         instance=payload.instance,
         recipients=payload.recipients,
         message=payload.message,
         delay_seconds=payload.delay_seconds,
     )
-    return {"task_id": task.id}
 
 
 def call_evolution(operation: Any) -> dict[str, Any]:

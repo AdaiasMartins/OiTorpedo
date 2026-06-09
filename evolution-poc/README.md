@@ -63,12 +63,28 @@ Com o worker rodando pelo `docker compose up -d --build`:
 docker compose run --rm worker-celery python -m app.cli bulk --instance main --numbers 5585999999999,5585888888888 --text "Teste em lote" --delay 3
 ```
 
+Cada destinatario vira uma task Celery independente, com retry e limite de duracao. O lote apenas agenda as tasks e retorna os `task_ids`.
+
 Ou por HTTP:
 
 ```bash
 curl -X POST http://localhost:8000/messages/bulk \
   -H 'Content-Type: application/json' \
   -d '{"instance":"main","recipients":["5585999999999","5585888888888"],"message":"Teste em lote","delay_seconds":3}'
+```
+
+Resposta esperada:
+
+```json
+{
+  "instance": "main",
+  "total": 2,
+  "delay_seconds": 3,
+  "task_ids": [
+    "id-da-primeira-task",
+    "id-da-segunda-task"
+  ]
+}
 ```
 
 Os logs estruturados aparecem no worker:

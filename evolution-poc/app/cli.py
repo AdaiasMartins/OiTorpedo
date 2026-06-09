@@ -4,7 +4,7 @@ import argparse
 import json
 
 from .evolution_client import EvolutionClient
-from .tasks import send_bulk_messages
+from .tasks import enqueue_bulk_messages
 
 
 def print_json(data: object) -> None:
@@ -47,13 +47,13 @@ def main() -> None:
     elif args.command == "send":
         print_json(client.send_text(args.instance, args.number, args.text))
     elif args.command == "bulk":
-        task = send_bulk_messages.delay(
+        result = enqueue_bulk_messages(
             instance=args.instance,
             recipients=parse_recipients(args.numbers),
             message=args.text,
             delay_seconds=args.delay,
         )
-        print_json({"task_id": task.id})
+        print_json(result)
 
 
 if __name__ == "__main__":
